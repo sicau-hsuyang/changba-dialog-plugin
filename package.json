@@ -1,0 +1,12 @@
+{
+  "name": "@changba/dialog-plugin",
+  "version": "0.0.1",
+  "description": "to open dialog with instruction method in vue2",
+  "main": "index.js",
+  "peerDependencies": {
+    "vue": "^2.6.10"
+  },
+  "keywords": [],
+  "author": "JohnYang",
+  "license": "MIT"
+}
