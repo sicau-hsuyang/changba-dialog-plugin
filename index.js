@@ -1,4 +1,4 @@
-const dialogInstance = [];
+let dialogInstance = [];
 
 export default {
   install(Vue) {
