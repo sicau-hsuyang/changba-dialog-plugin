@@ -3,6 +3,10 @@
   "version": "0.0.2",
   "description": "to open dialog with instruction method in vue2",
   "main": "index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
   "peerDependencies": {
     "vue": "^2.6.10"
   },
