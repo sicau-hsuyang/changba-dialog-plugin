@@ -14,7 +14,7 @@ export default {
      */
     const openDialog = (dialogType: string, params = {}, events: Record<string, Function> = {}) => {
       // destroy配置是否销毁弹窗
-      const { destroy, ...rest } = Object.assign({ destroy: true }, params);
+      let { destroy, ...rest } = Object.assign({ destroy: true }, params);
       let thisInstance: ComponentInstance;
       let oldInstance = dialogTypeMap.get(dialogType);
       // 如果强制创建新的，先将已经存在的旧的删除
@@ -34,29 +34,33 @@ export default {
             });
           },
         }).$mount(outlet);
+        // 设置元数据，再稍后将尝试寻找
+        metaMap.set(thisInstance, {
+          destroy,
+          display: getComputedStyle(thisInstance.$el as HTMLElement).display,
+        });
       } else {
         thisInstance = dialogTypeMap.get(dialogType);
         // 把它从不是active弹窗调整到active上去
         dialogInstanceStack = dialogInstanceStack.filter((x) => x !== oldInstance);
         const el = thisInstance.$el as HTMLElement;
-        el.style.display = metaMap.get(thisInstance).display || "block";
+        const meta = metaMap.get(thisInstance) as {
+          destroy: Boolean;
+          display: string;
+        };
+        el.style.display = meta.display || "block";
       }
       // 设置或更新弹窗类型
       dialogTypeMap.set(dialogType, thisInstance);
       // 把前一个活跃弹窗加到堆栈里面去
       if (activeDialogInstance) {
         // 将之前高亮的弹窗隐藏
-        (activeDialogInstance.$el as HTMLElement).style.display = 'none'
+        (activeDialogInstance.$el as HTMLElement).style.display = "none";
         dialogInstanceStack.push(activeDialogInstance);
         activeDialogInstance = null;
       }
       // 设置当前弹窗为活跃弹窗
       activeDialogInstance = thisInstance;
-      // 设置元数据，再稍后将尝试寻找
-      metaMap.set(activeDialogInstance, {
-        destroy,
-        display: getComputedStyle(thisInstance.$el as HTMLElement).display,
-      });
       return { close: closeDialog, instance: thisInstance };
     };
 
