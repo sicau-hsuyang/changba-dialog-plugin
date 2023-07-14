@@ -8,9 +8,9 @@
     "downlevelIteration": true,
     "resolveJsonModule": true,
     "jsx": "preserve",
-    "lib": ["esnext", "dom"],
+    "lib": ["ESNext", "dom"],
     "module": "esnext",
     "moduleResolution": "node"
   },
-  "include": ["index.ts"],
+  "include": ["index.ts"]
 }
