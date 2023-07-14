@@ -1,29 +1,19 @@
 import { VueConstructor, ComponentInstance } from "vue";
-let dialogInstance: ComponentInstance[] = [];
+let dialogInstanceStack: ComponentInstance[] = [];
+let activeDialogInstance: ComponentInstance | null = null;
 
 export default {
   install(Vue: VueConstructor) {
-    function _close(destroyInstance: ComponentInstance) {
-      if (!destroyInstance) {
-        console.log("destroyInstance not exist");
-        return;
-      }
-      destroyInstance.$destroy();
-      document.body.removeChild(destroyInstance.$el);
-      dialogInstance = dialogInstance.filter((v) => v !== destroyInstance);
-    }
-
     /**
      * 打开一个弹窗
      * @param dialogType
      * @param params
-     * @return { any }
      */
-    const openDialog = (dialogType: string, params = { singleInstance: true }, events: Record<string, Function> = {}) => {
+    const openDialog = (dialogType: string, params = { destroy: true }, events: Record<string, Function> = {}) => {
       const outlet = document.createElement("div");
       outlet.classList.add("dialog");
       document.body.appendChild(outlet);
-      const { singleInstance, ...rest } = params;
+      const { destroy, ...rest } = params;
       const thisInstance = new Vue({
         render: (h) => {
           return h(dialogType, {
@@ -31,40 +21,68 @@ export default {
             attrs: rest,
             on: {
               ...events,
-              close: _close,
+              close: closeAllDialog,
             },
           });
         },
       }).$mount(outlet);
-      // 替换第一个instance，如果有
-      if (singleInstance) {
-        const firstInstance = dialogInstance.shift();
-        firstInstance && _close(firstInstance);
-        dialogInstance.unshift(thisInstance);
-      } else {
-        dialogInstance.push(thisInstance);
-      }
-      return { close: _close.bind(this, thisInstance), instance: thisInstance };
+      // 设置当前弹窗为活跃弹窗
+      activeDialogInstance = thisInstance;
+      return { close: closeDialog.bind(this, destroy), instance: thisInstance };
     };
 
     /**
      * 关闭弹窗
      * @returns
      */
-    function closeDialog(destroyInstance: ComponentInstance) {
-      if (dialogInstance.length === 0) {
-        console.log("当前弹窗已经关闭，请先打开再关闭!");
+    const closeDialog = (destroy = true) => {
+      if (!activeDialogInstance) {
+        console.log("your need hide or destroy dialog instance not exist");
         return;
       }
-      if (destroyInstance) {
-        _close(destroyInstance);
+      // 如果需要销毁的话，直接销毁就好，并且要把栈中存储的之前的弹窗打开
+      if (destroy) {
+        destroyDialog(true);
       } else {
-        dialogInstance.forEach((ins) => {
-          _close(ins);
-        });
+        // 将弹窗的DOM隐藏，然后加入到堆栈中去
+        const el = activeDialogInstance.$el as HTMLElement;
+        el.style.display = "none";
+        dialogInstanceStack.push(activeDialogInstance);
       }
-    }
+      activeDialogInstance = null;
+    };
 
+    /**
+     * 销毁当前的活跃弹窗
+     * @returns
+     */
+    const destroyDialog = (showPreDialog: boolean) => {
+      if (!activeDialogInstance) {
+        console.log("your need hide or destroy dialog instance not exist");
+        return;
+      }
+      activeDialogInstance.$destroy();
+      document.body.removeChild(activeDialogInstance.$el);
+      if (dialogInstanceStack.length) {
+        activeDialogInstance = dialogInstanceStack.pop()!;
+        // 将当前活跃的弹窗显示为活跃
+        if (showPreDialog) {
+          const el = activeDialogInstance.$el as HTMLElement;
+          el.style.display = "block";
+        }
+      }
+    };
+
+    /**
+     * 关闭所有弹窗
+     */
+    const closeAllDialog = () => {
+      while (activeDialogInstance) {
+        destroyDialog(false);
+      }
+    };
+
+    Vue.prototype.$closeAllDialog = closeAllDialog;
     Vue.prototype.$closeDialog = closeDialog;
     Vue.prototype.$openDialog = openDialog;
   },
