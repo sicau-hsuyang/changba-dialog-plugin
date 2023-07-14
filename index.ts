@@ -13,16 +13,11 @@ export default {
      * @param params
      */
     const openDialog = (dialogType: string, params = {}, events: Record<string, Function> = {}) => {
-      // destroy配置是否销毁弹窗，reuse：如果已经存在，是否重用弹窗
-      const { destroy, reuse, ...rest } = Object.assign({ destroy: true, reuse: true }, params);
+      // destroy配置是否销毁弹窗
+      const { destroy, ...rest } = Object.assign({ destroy: true }, params);
       let thisInstance: ComponentInstance;
       let oldInstance = dialogTypeMap.get(dialogType);
       // 如果强制创建新的，先将已经存在的旧的删除
-      if (!reuse && oldInstance) {
-        dialogInstanceStack = dialogInstanceStack.filter((x) => x !== oldInstance);
-        oldInstance = null;
-      }
-      // 如果找不到旧的实例，则创建，1、强制不重用，old已经被回收，2、可重用，但是实例还没有
       if (!oldInstance) {
         const outlet = document.createElement("div");
         outlet.classList.add("dialog");
@@ -50,6 +45,8 @@ export default {
       dialogTypeMap.set(dialogType, thisInstance);
       // 把前一个活跃弹窗加到堆栈里面去
       if (activeDialogInstance) {
+        // 将之前高亮的弹窗隐藏
+        (activeDialogInstance.$el as HTMLElement).style.display = 'none'
         dialogInstanceStack.push(activeDialogInstance);
         activeDialogInstance = null;
       }
@@ -107,8 +104,13 @@ export default {
         activeDialogInstance = dialogInstanceStack.pop()!;
         // 将当前活跃的弹窗显示为活跃
         if (showPreDialog) {
+          // 尝试获取
+          let { display } = (metaMap.get(activeDialogInstance) || {}) as {
+            destroy: Boolean;
+            display: string;
+          };
           const el = activeDialogInstance.$el as HTMLElement;
-          el.style.display = "block";
+          el.style.display = display || "block";
         }
       }
     };
