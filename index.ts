@@ -133,6 +133,8 @@ export default {
         if (showPreDialog) {
           showAnyDialog(activeDialogInstance);
         }
+      } else {
+        activeDialogInstance = null;
       }
     };
 
