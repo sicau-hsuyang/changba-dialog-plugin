@@ -1,6 +1,7 @@
 import { VueConstructor, ComponentInstance } from "vue";
 import { MyMap } from "./map";
 const RealMap = Map || MyMap;
+// const RealMap = Map;
 const metaMap = new RealMap();
 const dialogTypeMap = new RealMap();
 let dialogInstanceStack: ComponentInstance[] = [];
@@ -66,6 +67,7 @@ export default {
         // 设置元数据，再稍后将尝试寻找
         metaMap.set(thisInstance, {
           destroy,
+          dialogType,
           display: getComputedStyle(thisInstance.$el as HTMLElement).display,
         });
       } else {
@@ -101,9 +103,6 @@ export default {
       // 如果需要销毁的话，直接销毁就好，并且要把栈中存储的之前的弹窗打开
       if (destroy) {
         destroyDialog(true);
-        // 删除配置的元数据，防止内存泄露
-        metaMap.delete(activeDialogInstance);
-        dialogTypeMap.delete(activeDialogInstance);
       } else {
         // 将弹窗的DOM隐藏，然后加入到堆栈中去
         const el = activeDialogInstance.$el as HTMLElement;
@@ -124,6 +123,10 @@ export default {
       }
       activeDialogInstance.$destroy();
       document.body.removeChild(activeDialogInstance.$el);
+      const { dialogType } = metaMap.get(activeDialogInstance) || {};
+      // 删除配置的元数据，防止内存泄露
+      metaMap.delete(activeDialogInstance);
+      dialogTypeMap.delete(dialogType);
       if (dialogInstanceStack.length && extractPreDialogToFill) {
         activeDialogInstance = dialogInstanceStack.pop()!;
         // 将当前活跃的弹窗显示为活跃
