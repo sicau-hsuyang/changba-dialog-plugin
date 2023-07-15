@@ -27,7 +27,17 @@ export default {
   methods: {
     handleClick() {
       // you have defined a component named by `Modal`
-      this.$openDialog("Modal");
+      this.$openDialog(
+        "Modal",
+        {
+          // 弹窗组件的保留配置，该属性不会传递给Vue组件，可以用它来控制弹窗关闭的时候不销毁
+          // destroy: false
+          // ...其他，正常透传到组件中作为属性
+        },
+        {
+          // events，配置组件内部触发的事件的回调
+        }
+      );
     },
     handleClose() {
       // close dialog

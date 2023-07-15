@@ -1,9 +1,10 @@
 import { VueConstructor, ComponentInstance } from "vue";
+import { MyMap } from "./map";
+const RealMap = Map || MyMap;
+const metaMap = new RealMap();
+const dialogTypeMap = new RealMap();
 let dialogInstanceStack: ComponentInstance[] = [];
 let activeDialogInstance: ComponentInstance | null = null;
-// TODO: 两个map可能存在兼容性问题
-const metaMap = new Map();
-const dialogTypeMap = new Map();
 
 export default {
   install(Vue: VueConstructor) {
