@@ -1,9 +1,6 @@
 import { VueConstructor, ComponentInstance } from "vue";
-import { MyMap } from "./map";
-const RealMap = Map || MyMap;
-// const RealMap = Map;
-const metaMap = new RealMap();
-const dialogTypeMap = new RealMap();
+const metaMap = new Map();
+const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
 let activeDialogInstance: ComponentInstance | null = null;
 
