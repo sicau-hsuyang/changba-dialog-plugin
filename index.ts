@@ -4,6 +4,16 @@ const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
 let activeDialogInstance: ComponentInstance | null = null;
 
+type CustomEvents = {
+  $refs: {
+    root?: {
+      $options: {
+        onShow?: Function;
+      };
+    };
+  };
+};
+
 export default {
   install(Vue: VueConstructor) {
     /**
@@ -11,12 +21,13 @@ export default {
      * @param instance
      */
     const showAnyDialog = (instance: ComponentInstance) => {
-      const el = instance.$el as HTMLElement;
+      const el = instance.$el as HTMLElement & { __vue__?: ComponentInstance & CustomEvents };
       const meta = metaMap.get(instance) as {
         destroy: Boolean;
         display: string;
       };
       el.style.display = meta.display || "block";
+      typeof el.__vue__?.$refs.root?.$options.onShow === "function" && el.__vue__?.$refs.root?.$options.onShow();
     };
 
     /**
@@ -54,6 +65,7 @@ export default {
             return h(dialogType, {
               props: rest,
               attrs: rest,
+              ref: "root",
               on: {
                 ...events,
                 close: closeAllDialog,
