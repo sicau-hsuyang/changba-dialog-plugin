@@ -47,3 +47,50 @@ export default {
 };
 </script>
 ```
+
+## lifecycle
+
+生命周期示例代码：
+
+```vue
+<template>
+  <div>我是一个组件</div>
+</template>
+
+<script>
+export default {
+  name: 'LifecycleDemo'
+  onShow() {
+    console.log("on show");
+  },
+};
+</script>
+```
+
+开启弹窗：
+
+```vue
+<script>
+export default {
+  name: "Demo",
+  methods: {
+    handleClick() {
+      this.$openDialog(
+        "LifecycleDemo",
+        {
+          destroy: false,
+        },
+        {
+          // events，配置组件内部触发的事件的回调
+        }
+      );
+    },
+    handleClose() {
+      this.$closeDialog();
+    },
+  },
+};
+</script>
+```
+
+当`LifecycleDemo`组件被`DialogPlugin`插件再次渲染的时候，会触发其预设的`onShow`方法。
