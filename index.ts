@@ -96,7 +96,7 @@ export default {
      * 关闭弹窗
      * @returns
      */
-    const closeDialog = () => {
+    const closeDialog = (showPreDialog: boolean) => {
       if (!activeDialogInstance) {
         console.log("your need hide or destroy dialog instance not exist");
         return;
@@ -111,7 +111,7 @@ export default {
       }
       // 如果需要销毁的话，直接销毁就好，并且要把栈中存储的之前的弹窗打开
       if (destroy) {
-        destroyDialog(true);
+        destroyDialog(showPreDialog);
       } else {
         // 将弹窗的DOM隐藏，然后加入到堆栈中去
         const el = activeDialogInstance.$el as HTMLElement;
