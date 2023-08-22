@@ -20,14 +20,14 @@ export default {
      * 将某个弹窗实例设置为显示
      * @param instance
      */
-    const showAnyDialog = (instance: ComponentInstance) => {
-      const el = instance.$el as HTMLElement & { __vue__?: ComponentInstance & CustomEvents };
+    const showAnyDialog = (instance: ComponentInstance & CustomEvents) => {
+      const el = instance.$el as HTMLElement;
       const meta = metaMap.get(instance) as {
         destroy: Boolean;
         display: string;
       };
       el.style.display = meta.display || "block";
-      typeof el.__vue__?.$refs.root?.$options.onShow === "function" && el.__vue__?.$refs.root?.$options.onShow();
+      typeof instance.$refs.root?.$options.onShow === "function" && instance.$refs.root.$options.onShow.apply(instance.$refs.root);
     };
 
     /**
