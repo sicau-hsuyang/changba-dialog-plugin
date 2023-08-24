@@ -3,7 +3,6 @@ const metaMap = new Map();
 const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
 let activeDialogInstance: ComponentInstance | null = null;
-const CB_DISABLED_SCROLL = "van-overflow-hidden";
 
 type CustomEvents = {
   $refs: {
@@ -14,6 +13,55 @@ type CustomEvents = {
     };
   };
 };
+
+type LockOptions = {
+  unlock?: () => void;
+  lockScroll?: () => void;
+};
+
+/**
+ * 遍历Vue的组件树，如果发现有CbDialog或者CbModal这类组件，需要增加锁定
+ * @param instance
+ * @returns
+ */
+function lockComponentsTree(instance?: ComponentInstance) {
+  if (!instance) {
+    return;
+  }
+  const queue: Array<ComponentInstance & LockOptions> = [instance];
+  while (queue.length) {
+    const comp = queue.shift()!;
+    if (typeof comp.lockScroll === "function") {
+      comp.lockScroll();
+      return;
+    }
+    if (Array.isArray(comp.$children)) {
+      queue.push(...comp.$children);
+    }
+  }
+}
+
+/**
+ * 遍历Vue的组件树，如果发现有CbDialog或者CbModal这类组件，需要解除锁定
+ * @param instance
+ * @returns
+ */
+function unlockComponentsTree(instance?: ComponentInstance) {
+  if (!instance) {
+    return;
+  }
+  const queue: Array<ComponentInstance & LockOptions> = [instance];
+  while (queue.length) {
+    const comp = queue.shift()!;
+    if (typeof comp.unlock === "function") {
+      comp.unlock();
+      return;
+    }
+    if (Array.isArray(comp.$children)) {
+      queue.push(...comp.$children);
+    }
+  }
+}
 
 export default {
   install(Vue: VueConstructor) {
@@ -29,9 +77,7 @@ export default {
       };
       el.style.display = meta.display || "block";
       typeof instance.$refs.root?.$options.onShow === "function" && instance.$refs.root.$options.onShow.apply(instance.$refs.root);
-      if (!document.body.classList.contains(CB_DISABLED_SCROLL)) {
-        document.body.classList.add(CB_DISABLED_SCROLL);
-      }
+      lockComponentsTree(instance);
     };
 
     /**
@@ -117,15 +163,13 @@ export default {
       if (destroy) {
         destroyDialog(showPreDialog);
       } else {
+        // 如果发现被禁用滚动了的话，终止禁用
+        unlockComponentsTree(activeDialogInstance as ComponentInstance & LockOptions);
         // 将弹窗的DOM隐藏，然后加入到堆栈中去
         const el = activeDialogInstance.$el as HTMLElement;
         el.style.display = "none";
         dialogInstanceStack.push(activeDialogInstance);
         activeDialogInstance = null;
-        // 如果发现被禁用滚动了的话，终止禁用
-        if (document.body.classList.contains(CB_DISABLED_SCROLL)) {
-          document.body.classList.remove(CB_DISABLED_SCROLL);
-        }
       }
     };
 
