@@ -95,6 +95,7 @@ export default {
         // 确实不销毁， 将之前高亮的弹窗隐藏
         if (preDestroy === false) {
           (activeDialogInstance.$el as HTMLElement).style.display = "none";
+          unlockComponentsTree(activeDialogInstance);
           dialogInstanceStack.push(activeDialogInstance);
         } else {
           destroyDialog(false, false);
