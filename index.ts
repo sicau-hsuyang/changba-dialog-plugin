@@ -3,6 +3,7 @@ const metaMap = new Map();
 const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
 let activeDialogInstance: ComponentInstance | null = null;
+const CB_DISABLED_SCROLL = "van-overflow-hidden";
 
 type CustomEvents = {
   $refs: {
@@ -28,6 +29,9 @@ export default {
       };
       el.style.display = meta.display || "block";
       typeof instance.$refs.root?.$options.onShow === "function" && instance.$refs.root.$options.onShow.apply(instance.$refs.root);
+      if (!document.body.classList.contains(CB_DISABLED_SCROLL)) {
+        document.body.classList.add(CB_DISABLED_SCROLL);
+      }
     };
 
     /**
@@ -118,6 +122,10 @@ export default {
         el.style.display = "none";
         dialogInstanceStack.push(activeDialogInstance);
         activeDialogInstance = null;
+        // 如果发现被禁用滚动了的话，终止禁用
+        if (document.body.classList.contains(CB_DISABLED_SCROLL)) {
+          document.body.classList.remove(CB_DISABLED_SCROLL);
+        }
       }
     };
 
