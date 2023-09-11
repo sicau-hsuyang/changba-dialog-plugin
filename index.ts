@@ -1,4 +1,5 @@
 import { VueConstructor, ComponentInstance } from "vue";
+import { Store } from "vuex";
 const metaMap = new Map();
 const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
@@ -63,8 +64,13 @@ function unlockComponentsTree(instance?: ComponentInstance) {
   }
 }
 
+interface PluginOptions{
+  store?: Store<unknown>;
+}
+
 export default {
-  install(Vue: VueConstructor) {
+  install(Vue: VueConstructor, options: PluginOptions = {}) {
+    const { store } = options
     /**
      * 将某个弹窗实例设置为显示
      * @param instance
@@ -112,6 +118,7 @@ export default {
         outlet.classList.add("dialog");
         document.body.appendChild(outlet);
         thisInstance = new Vue({
+          store,
           render: (h) => {
             return h(dialogType, {
               props: rest,
