@@ -64,13 +64,34 @@ function unlockComponentsTree(instance?: ComponentInstance) {
   }
 }
 
-interface PluginOptions{
+interface PluginOptions {
   store?: Store<unknown>;
+}
+
+function waitRenderEnd(root: ComponentInstance) {
+  let timer: number;
+  let counter = 0;
+  return new Promise((resolve) => {
+    timer = setInterval(() => {
+      const isEl = root.$el.nodeType === 1;
+      if (counter > 10) {
+        clearInterval(timer);
+        resolve(false);
+        return;
+      }
+      if (isEl) {
+        clearInterval(timer);
+        resolve(true);
+      } else {
+        counter++;
+      }
+    }, 30);
+  });
 }
 
 export default {
   install(Vue: VueConstructor, options: PluginOptions = {}) {
-    const { store } = options
+    const { store } = options;
     /**
      * 将某个弹窗实例设置为显示
      * @param instance
@@ -91,7 +112,7 @@ export default {
      * @param dialogType
      * @param params
      */
-    const openDialog = (dialogType: string, params = {}, events: Record<string, Function> = {}) => {
+    const openDialog = async (dialogType: string, params = {}, events: Record<string, Function> = {}) => {
       // 如果前一个弹窗还活跃，则需要先处理
       if (activeDialogInstance) {
         const { destroy: preDestroy } = metaMap.get(activeDialogInstance) as {
@@ -131,6 +152,8 @@ export default {
             });
           },
         }).$mount(outlet);
+        // 等待元素的渲染完成
+        await waitRenderEnd(thisInstance);
         // 设置元数据，再稍后将尝试寻找
         metaMap.set(thisInstance, {
           destroy,

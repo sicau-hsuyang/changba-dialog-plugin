@@ -1,6 +1,6 @@
 {
   "name": "@changba/dialog-plugin",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "to open dialog with instruction method in vue2",
   "main": "index.js",
   "scripts": {
