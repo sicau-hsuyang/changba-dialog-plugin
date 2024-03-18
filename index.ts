@@ -103,7 +103,8 @@ export default {
         display: string;
       };
       el.style.display = meta.display || "block";
-      typeof instance.$refs.root?.$options.onShow === "function" && instance.$refs.root.$options.onShow.apply(instance.$refs.root);
+      typeof instance.$refs.root?.$options.onShow === "function" &&
+        instance.$refs.root.$options.onShow.apply(instance.$refs.root);
       lockComponentsTree(instance);
     };
 
@@ -154,11 +155,12 @@ export default {
         }).$mount(outlet);
         // 等待元素的渲染完成
         await waitRenderEnd(thisInstance);
+        const targetEl = thisInstance.$el.nodeType === 1 ? thisInstance.$el : thisInstance.$children[0].$el;
         // 设置元数据，再稍后将尝试寻找
         metaMap.set(thisInstance, {
           destroy,
           dialogType,
-          display: getComputedStyle(thisInstance.$el as HTMLElement).display,
+          display: getComputedStyle(targetEl as HTMLElement).display,
         });
       } else {
         thisInstance = dialogTypeMap.get(dialogType);
@@ -214,7 +216,8 @@ export default {
         return;
       }
       activeDialogInstance.$destroy();
-      document.body.removeChild(activeDialogInstance.$el);
+      const targetEl = activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el;
+      document.body.removeChild(targetEl);
       const { dialogType } = metaMap.get(activeDialogInstance) || {};
       // 删除配置的元数据，防止内存泄露
       metaMap.delete(activeDialogInstance);
