@@ -155,12 +155,13 @@ export default {
         }).$mount(outlet);
         // 等待元素的渲染完成
         await waitRenderEnd(thisInstance);
-        const targetEl = thisInstance.$el.nodeType === 1 ? thisInstance.$el : thisInstance.$children[0].$el;
+        const targetEl = thisInstance.$el.nodeType === 1 ? thisInstance.$el : thisInstance.$children[0].$el || null;
         // 设置元数据，再稍后将尝试寻找
         metaMap.set(thisInstance, {
           destroy,
           dialogType,
-          display: getComputedStyle(targetEl as HTMLElement).display,
+          // 取一个兜底
+          display: targetEl ? getComputedStyle(targetEl as HTMLElement).display : "block",
         });
       } else {
         thisInstance = dialogTypeMap.get(dialogType);
@@ -216,7 +217,8 @@ export default {
         return;
       }
       activeDialogInstance.$destroy();
-      const targetEl = activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el;
+      const targetEl =
+        activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el;
       document.body.removeChild(targetEl);
       const { dialogType } = metaMap.get(activeDialogInstance) || {};
       // 删除配置的元数据，防止内存泄露
