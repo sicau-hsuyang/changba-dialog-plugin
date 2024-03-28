@@ -161,7 +161,7 @@ export default {
           destroy,
           dialogType,
           // 取一个兜底
-          display: targetEl ? getComputedStyle(targetEl as HTMLElement).display : "block",
+          display: targetEl && targetEl.nodeType === 1 ? getComputedStyle(targetEl as HTMLElement).display : "block",
         });
       } else {
         thisInstance = dialogTypeMap.get(dialogType);
