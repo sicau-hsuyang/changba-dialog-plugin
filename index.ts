@@ -74,18 +74,19 @@ function waitRenderEnd(root: ComponentInstance) {
   return new Promise((resolve) => {
     timer = setInterval(() => {
       const isEl = root.$el.nodeType === 1;
-      if (counter > 10) {
+      const isChildEl = root.$children?.[0]?.$el?.nodeType === 1
+      if (counter > 300) {
         clearInterval(timer);
         resolve(false);
         return;
       }
-      if (isEl) {
+      if (isEl || isChildEl) {
         clearInterval(timer);
         resolve(true);
       } else {
         counter++;
       }
-    }, 30);
+    }, 5);
   });
 }
 
