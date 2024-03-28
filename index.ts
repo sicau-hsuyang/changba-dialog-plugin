@@ -86,7 +86,7 @@ function waitRenderEnd(root: ComponentInstance) {
       } else {
         counter++;
       }
-    }, 5);
+    }, 30);
   });
 }
 
