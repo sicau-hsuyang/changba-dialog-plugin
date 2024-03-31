@@ -74,7 +74,7 @@ function waitRenderEnd(root: ComponentInstance) {
   return new Promise((resolve) => {
     timer = setInterval(() => {
       const isEl = root.$el.nodeType === 1;
-      const isChildEl = root.$children?.[0]?.$el?.nodeType === 1
+      const isChildEl = root.$children?.[0]?.$el?.nodeType === 1;
       if (counter > 300) {
         clearInterval(timer);
         resolve(false);
@@ -88,6 +88,17 @@ function waitRenderEnd(root: ComponentInstance) {
       }
     }, 30);
   });
+}
+
+/**
+ * 极端情况下就算有弹窗，也要销毁
+ */
+function fallbackDialog() {
+  const dialogEl = document.querySelector(".cb-dialog");
+  if (!dialogEl) {
+    return;
+  }
+  dialogEl.parentNode?.removeChild(dialogEl);
 }
 
 export default {
@@ -184,6 +195,7 @@ export default {
     const closeDialog = (showPreDialog: boolean) => {
       if (!activeDialogInstance) {
         console.log("your need hide or destroy dialog instance not exist");
+        fallbackDialog();
         return;
       }
       // 尝试获取
@@ -201,7 +213,12 @@ export default {
         // 如果发现被禁用滚动了的话，终止禁用
         unlockComponentsTree(activeDialogInstance as ComponentInstance & LockOptions);
         // 将弹窗的DOM隐藏，然后加入到堆栈中去
-        const el = activeDialogInstance.$el as HTMLElement;
+        const el = (
+          activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el
+        ) as HTMLElement;
+        if (el.nodeType !== 1) {
+          throw new Error("元素获取不到!");
+        }
         el.style.display = "none";
         dialogInstanceStack.push(activeDialogInstance);
         activeDialogInstance = null;
@@ -215,12 +232,18 @@ export default {
     const destroyDialog = (showPreDialog: boolean, extractPreDialogToFill = true) => {
       if (!activeDialogInstance) {
         console.log("your need hide or destroy dialog instance not exist");
+        fallbackDialog();
         return;
       }
       activeDialogInstance.$destroy();
       const targetEl =
         activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el;
-      document.body.removeChild(targetEl);
+      try {
+        document.body.removeChild(targetEl);
+      } catch (exp) {
+        console.log(exp);
+        fallbackDialog();
+      }
       const { dialogType } = metaMap.get(activeDialogInstance) || {};
       // 删除配置的元数据，防止内存泄露
       metaMap.delete(activeDialogInstance);
