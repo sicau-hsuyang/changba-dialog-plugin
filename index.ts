@@ -240,7 +240,7 @@ export default {
       }
       activeDialogInstance.$destroy();
       const targetEl =
-        metaMap.get(activeDialogInstance) as HTMLElement;
+        metaMap.get(activeDialogInstance).el as HTMLElement;
       try {
         document.body.removeChild(targetEl);
       } catch (exp) {
