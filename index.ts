@@ -109,14 +109,14 @@ export default {
      * @param instance
      */
     const showAnyDialog = (instance: ComponentInstance & CustomEvents) => {
-      const el = instance.$el as HTMLElement;
       const meta = metaMap.get(instance) as {
         destroy: Boolean;
         display: string;
+        el: HTMLElement;
       };
-      el.style.display = meta.display || "block";
+      meta.el.style.display = meta.display || "block";
       typeof instance.$refs.root?.$options.onShow === "function" &&
-        instance.$refs.root.$options.onShow.apply(instance.$refs.root);
+      instance.$refs.root.$options.onShow.apply(instance.$refs.root);
       lockComponentsTree(instance);
     };
 
@@ -128,13 +128,14 @@ export default {
     const openDialog = async (dialogType: string, params = {}, events: Record<string, Function> = {}) => {
       // 如果前一个弹窗还活跃，则需要先处理
       if (activeDialogInstance) {
-        const { destroy: preDestroy } = metaMap.get(activeDialogInstance) as {
+        const { destroy: preDestroy, el: parentEl } = metaMap.get(activeDialogInstance) as {
           destroy: Boolean;
           display: string;
+          el: HTMLElement;
         };
         // 确实不销毁， 将之前高亮的弹窗隐藏
         if (preDestroy === false) {
-          (activeDialogInstance.$el as HTMLElement).style.display = "none";
+          parentEl.style.display = "none";
           unlockComponentsTree(activeDialogInstance);
           dialogInstanceStack.push(activeDialogInstance);
         } else {
@@ -164,16 +165,18 @@ export default {
               },
             });
           },
-        }).$mount(outlet);
+        }).$mount();
+        outlet.appendChild(thisInstance.$el);
         // 等待元素的渲染完成
-        await waitRenderEnd(thisInstance);
-        const targetEl = thisInstance.$el.nodeType === 1 ? thisInstance.$el : thisInstance.$children[0].$el || null;
+        // await waitRenderEnd(thisInstance);
         // 设置元数据，再稍后将尝试寻找
         metaMap.set(thisInstance, {
+          // vue 实例父元素
+          el: outlet,
           destroy,
           dialogType,
           // 取一个兜底
-          display: targetEl && targetEl.nodeType === 1 ? getComputedStyle(targetEl as HTMLElement).display : "block",
+          display: getComputedStyle(outlet as HTMLElement).display,
         });
       } else {
         thisInstance = dialogTypeMap.get(dialogType);
@@ -214,7 +217,7 @@ export default {
         unlockComponentsTree(activeDialogInstance as ComponentInstance & LockOptions);
         // 将弹窗的DOM隐藏，然后加入到堆栈中去
         const el = (
-          activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el
+          metaMap.get(activeDialogInstance).el
         ) as HTMLElement;
         if (el.nodeType !== 1) {
           throw new Error("元素获取不到!");
@@ -237,7 +240,7 @@ export default {
       }
       activeDialogInstance.$destroy();
       const targetEl =
-        activeDialogInstance.$el.nodeType === 1 ? activeDialogInstance.$el : activeDialogInstance.$children[0].$el;
+        metaMap.get(activeDialogInstance) as HTMLElement;
       try {
         document.body.removeChild(targetEl);
       } catch (exp) {
