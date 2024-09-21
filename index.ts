@@ -1,5 +1,6 @@
 import { VueConstructor, ComponentInstance } from "vue";
 import { Store } from "vuex";
+import type { IVueI18n } from 'vue-i18n'
 const metaMap = new Map();
 const dialogTypeMap = new Map();
 let dialogInstanceStack: ComponentInstance[] = [];
@@ -66,6 +67,7 @@ function unlockComponentsTree(instance?: ComponentInstance) {
 
 interface PluginOptions {
   store?: Store<unknown>;
+  i18n?: IVueI18n;
 }
 
 function waitRenderEnd(root: ComponentInstance) {
@@ -103,7 +105,7 @@ function fallbackDialog() {
 
 export default {
   install(Vue: VueConstructor, options: PluginOptions = {}) {
-    const { store } = options;
+    const { store, i18n } = options;
     /**
      * 将某个弹窗实例设置为显示
      * @param instance
@@ -154,6 +156,7 @@ export default {
         document.body.appendChild(outlet);
         thisInstance = new Vue({
           store,
+          i18n,
           render: (h) => {
             return h(dialogType, {
               props: rest,
